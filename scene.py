@@ -16,7 +16,12 @@ def rnd_polygon(x, y, r, n, dx, dy, angle0=None):
     return PolyLine(vs, enclosed=True)
 
 class Scene(object):
-    def __init__(self, )
+    def __init__(self, screen, tank, enemy, obstacles):
+        self.screen = screen
+        self.units = [tank, enemy]
+        self.obstacles = obstacles
+
+    
 
 if __name__ == "__main__":
     from screen import Screen
