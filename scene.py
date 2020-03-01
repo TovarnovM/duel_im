@@ -1,4 +1,4 @@
-from easyvec import Vec2
+from easyvec import Vec2, Rect
 from easyvec.geometry import PolyLine, intersect, is_in_polygon 
 import numpy as np
 
@@ -15,7 +15,17 @@ def rnd_polygon(x, y, r, n, dx, dy, angle0=None):
         for i in range(n)]
     return PolyLine(vs, enclosed=True)
 
+def get_obstacles(w, h):
+    r1 = Rect(0,0, w/4, h/4)
+    r2 = Rect(w,h, w-w/4, h-h/4)
+    
+
 class Scene(object):
+    @classmethod
+    def get_standart(cls, tank_brain_foo, enemy_brain_foo, render):
+
+        return cls()
+
     def __init__(self, screen, tank, enemy, obstacles):
         self.screen = screen
         self.units = [tank, enemy]
