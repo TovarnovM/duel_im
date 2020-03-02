@@ -21,23 +21,20 @@ def get_obstacles(w, h):
     
 
 class Scene(object):
-    @classmethod
-    def get_standart(cls, tank_brain_foo, enemy_brain_foo, render):
-
-        return cls()
-
-    def __init__(self, screen, tank, enemy, obstacles):
-        self.screen = screen
-        self.units = [tank, enemy]
+    def __init__(self, obstacles):
         self.obstacles = obstacles
 
-    
+    def intersect_ray(self, p1, p2) -> Vec2:
+        pass
+
+    def get_vis_polygon(self, pos: Vec2, r: float, alpha: float, thetta: float) -> PolyLine:
+        pass
+
+    def intersect_segment(self, p1, p2) -> Vec2:
+        pass
+
+
 
 if __name__ == "__main__":
-    from screen import Screen
-    sc = Screen(1000, 500, (0,0), (500, 250))
     pl = rnd_polygon(200, 100, 50, 3, 20, 20)
-    sc.draw(pl)
-    sc.update()
-    input()
     
