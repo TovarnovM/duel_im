@@ -95,6 +95,9 @@ class Round(object):
         self.dmg = dmg
         self.alive = True
 
+    def get_move_segment(self, dt: float):
+        return (self.pos.copy(), self.pos + dt * self.vel)
+
 
 
 if __name__ == "__main__":

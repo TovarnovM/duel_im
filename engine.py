@@ -24,8 +24,12 @@ class Engine(object):
 
 
 
-    def round_step(self, round: Round, dt: float):
-        pass
+    def round_step(self, r: Round, dt: float):
+        p1, p2 = r.get_move_segment(dt)
+        p3 = self.scene.intersect_segment(p1, p2)
+        pos_new = p3 if p3 else p2
+        r.pos = pos_new
+        
 
     def _validate(self, comands: dict, name: str, vmin, vmax):
         try:
