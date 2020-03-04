@@ -1,5 +1,5 @@
 from easyvec import Vec2, Rect
-from easyvec.geometry import PolyLine, intersect, is_in_polygon 
+from easyvec.geometry import PolyLine, intersect, is_in_polygon, _sortreduce_by_distance
 import numpy as np
 
 
@@ -21,17 +21,48 @@ def get_obstacles(w, h):
     
 
 class Scene(object):
+    @classmethod
+    def get_standart(cls, w: float, h: float, n: int, m: int):
+        obs = [PolyLine([
+            Vec2(0,0), Vec2(w,0), Vec2(w,h), Vec2(0, h)
+        ], enclosed=True)]
+        w1, h1 = w / n, h / m
+        r = min(w1, h1) * 0.2
+        for i in range(n):
+            for j in range(m):
+                if (i==0 and j==0) or (i==(n-1) and j==(m-1)):
+                    continue
+                x = w1/2 + w1 * i + np.random.uniform(-0.1, 0.1) * w1
+                y = h1/2 + h1 * j + np.random.uniform(-0.1, 0.1) * h1
+                ri = r * np.random.uniform(0.9, 1.1)
+                nn = np.random.randint(3,6)
+                dx = w1 * np.random.uniform(0.02, 0.1)
+                dy = h1 * np.random.uniform(0.02, 0.1)
+                obs.append(rnd_polygon(x,y,ri, nn, dx, dy))
+        return cls(obs)
+
+
+
     def __init__(self, obstacles):
         self.obstacles = obstacles
 
-    def intersect_ray(self, p1, p2) -> Vec2:
-        pass
-
     def get_vis_polygon(self, pos: Vec2, r: float, alpha: float, thetta: float) -> PolyLine:
-        pass
+        n_rays = 13
+        angles = np.linspace(-thetta+alpha, thetta+alpha, n_rays)
+        p2s = [Vec2(r ,0).rotate(angle, degrees=True).add(pos) for angle in angles]
+        
+        ps = [pos.copy()]
+        for p2 in p2s:
+            p1, p2 = self.intersected_segment(pos, p2)
+            ps.append(p2)
+        return PolyLine(ps)
 
-    def intersect_segment(self, p1, p2) -> Vec2:
-        pass
+    def intersected_segment(self, p1: Vec2, p2: Vec2) -> tuple:
+        ps = [p2.copy()]
+        for pl in self.obstacles:
+            ps += pl.intersect_segment(p1, p2)
+        ps = _sortreduce_by_distance(ps, p1)
+        return (p1.copy(), ps[0])
 
 
 

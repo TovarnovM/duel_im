@@ -1,21 +1,35 @@
 from easyvec import Vec2, Mat2, PolyLine
 from easyvec.geometry import _convert
-from screen import Screen
 from math import pi, sqrt
 import numpy as np
 
 class Unit(object):
-    def __init__(self, pos, alpha, brain_foo, thetta, r, v_max, d_alpha_max, n_rays, s_vis, dmg, round_vel, hp, shot_delta):
+    @classmethod
+    def get_some(cls, pos, uname='test_unit'):
+        def rnd_foo(*args, **kwargs):
+            def inner(d, name, v1, v2):
+                if np.random.random() < 0.3:
+                    d[name] = np.random.uniform(v1, v2)
+            res = {}
+            inner(res, 'move', -0.2, 1)
+            inner(res, 'rotate', -1, 1)
+            inner(res, 'vision', -1, 1)
+            inner(res, 'fire', 0.5, 1)
+            return res
+        return cls(uname, pos, np.random.uniform(-170,170), rnd_foo, 90, 20, 5, 90, 10, 1, 30, 3, 2)
+
+    def __init__(self, name, pos, alpha, brain_foo, theta, r_vis, v_max, d_alpha_max, n_rays, dmg, round_vel, hp, shot_delta):
+        self.name = name
         self.pos = _convert(pos)
         self.alpha = alpha
         self.brain_foo = brain_foo
-        self.thetta = thetta
-        self.r = r
+        self.theta = theta
+        self.r_vis = r_vis
         self.v_max = v_max
         self.d_alpha_max = d_alpha_max
         self.n_rays = n_rays
-        self.s_vis = s_vis
-        self.polygon_local = PolyLine([Vec2(1,0), Vec2(-0.25,-0.5), Vec2(-0.25,0.5)], enclosed=True)
+        self.s_vis = pi * r_vis**2 / 2
+        self.polygon_local = PolyLine([Vec2(2,0), Vec2(-1,-1), Vec2(-1,1)], enclosed=True)
         self.dmg = dmg
         self.round_vel = round_vel
         self.hp = hp
@@ -23,9 +37,16 @@ class Unit(object):
         self.time_last_shot = -999
         self.shot_delta = shot_delta
 
+        self.vis_polygon = None
+        self.vis_line = None
+        self.intersected = None
+
+        self.set_alpha(alpha)
+        self.set_theta(theta)
+
     @property
     def can_shoot(self):
-        return self.time - self.shot_delta > self.time_last_shot
+        return self.time - self.shot_delta >= self.time_last_shot
 
     def get_move_segment(self, vel_portion: float, dalpha_portion: float, dt: float):
         if abs(vel_portion) < 1e-8:
@@ -39,19 +60,21 @@ class Unit(object):
         self.set_alpha(self.alpha + dt * rotate_signal * self.d_alpha_max)
 
     def change_vision(self, d_vision, dt):
-        thetta_new = self.thetta + dt * d_vision
+        thetta_new = self.theta + dt * d_vision
         thetta_new = 360 if thetta_new > 360 else 2 if thetta_new < 2 else thetta_new
-        self.set_thetta(thetta_new)
+        self.set_theta(thetta_new)
 
     @property
-    def polygon_world(self):
-        return self.polygon_local.transform(self.self.M_rot_1).add_vec(self.pos)
+    def polygon_world(self) -> PolyLine:
+        pl1 = self.polygon_local.transform(self.M_rot_1)
+        pl2 = pl1.add_vec(self.pos)
+        return pl2
 
-    def set_thetta(self, thetta):
+    def set_theta(self, thetta):
         self.thetta = thetta
-        r = sqrt(s_vis/thetta * 180 / pi)
-        self.angles = np.linspace(-self.thetta, self.thetta, self.n_rays)
-        self.rays = [Vec2(r,0).rotate(angle, degrees=True) for angle in angles]
+        self.r_vis = sqrt(self.s_vis/thetta * 180 / pi)
+        self.angles = np.linspace(-self.theta, self.theta, self.n_rays)
+        self.rays = [Vec2(self.r_vis ,0).rotate(angle, degrees=True) for angle in self.angles]
 
     def set_alpha(self, alpha):
         self.alpha = alpha
@@ -76,24 +99,28 @@ class Unit(object):
             return self.brain_foo(signals)
         return {}
 
-    def shoot(self) -> Round:
+    def shoot(self):
         if not self.can_shoot:
             return None
         angle = np.random.normal(self.alpha, self.thetta/3)
         vel = Vec2(self.round_vel, 0).rotate(angle, degrees=True)
         self.time_last_shot = self.time
-        return Round(self.pos, vel, self.dmg)
+        v = 3*vel.norm() + self.pos
+        return Round(v, vel, self.dmg)
 
     
 
 
 
 class Round(object):
+    id_counter = 0
+
     def __init__(self, pos, vel, dmg):
         self.pos = _convert(pos).copy()
         self.vel = _convert(vel).copy()
         self.dmg = dmg
-        self.alive = True
+        self.id = Round.id_counter
+        Round.id_counter += 1
 
     def get_move_segment(self, dt: float):
         return (self.pos.copy(), self.pos + dt * self.vel)

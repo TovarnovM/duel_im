@@ -2,12 +2,12 @@ import pygame
 
 from easyvec import Vec2
 from easyvec.geometry import PolyLine, _convert
-
+from unit import Unit, Round
 
 class Screen(object):
     """Класс для отображения состояния имитационной модели на плоскости. Требует библиотеки pygame ($pip install pygame)
     """
-    def __init__(self, display_width, display_height, v0, v1):
+    def __init__(self, display_width, display_height, v0, v1, clock_tick=40):
         """Конструктор
         
         Arguments:
@@ -15,12 +15,14 @@ class Screen(object):
             display_height {int} -- высота окна отображения в пикселях
             v0 {float} -- координаты нижней левой координаты оботбражения
             v1 {float} -- координаты верхней правой координаты оботбражения
+            clock_tick
         """
         self.v1 = _convert(v1)
         self.v0 = _convert(v0)
         self.display_height = display_height
         self.display_width = display_width
         self.pygame = None
+        self.clock_tick = clock_tick
 
     def to_pixels(self, vec):
         """Метод перевода координат имитационной модели в пиксели на экране отображения
@@ -67,16 +69,45 @@ class Screen(object):
         pygame.display.update()
         if clock_tick is not None:
             self.clock.tick(clock_tick)
+        else:
+            self.clock.tick(self.clock_tick)
 
     def draw(self, who):
         self._initpygame()
         if isinstance(who, PolyLine):
             self.draw_poly_line(who)
+        elif isinstance(who, Unit):
+            self.draw_unit(who)
+        elif isinstance(who, Round):
+            self.draw_round(who)
 
-    def draw_poly_line(self, pl: PolyLine):
+    def draw_round(self, r: Round, color=None):
+        if color is None:
+            color = (255,0,0)
+        self.pygame.draw.circle(
+            self.screen_main,
+            color,
+            self.to_pixels(r.pos),
+            2
+        )
+
+    def draw_unit(self, u: Unit):
+        self.draw_poly_line(u.polygon_world, (0,255,0))
+        for p1, p2 in u.get_rays_world():
+            self.pygame.draw.aaline(
+                self.screen_main, 
+                (50,50,50),
+                self.to_pixels(p1),
+                self.to_pixels(p2)
+            )
+
+
+    def draw_poly_line(self, pl: PolyLine, color=None):
+        if color is None:
+            color = (0,0,255)
         self.pygame.draw.aalines(
             self.screen_main, 
-            (255,0,0), 
+            color, 
             pl.enclosed, 
             [self.to_pixels(v) for v in pl.vecs], 
             2)
@@ -87,7 +118,7 @@ class Screen(object):
         Keyword Arguments:
             color {tuple} -- код цвета (по-умолчанию белый (255,255,255)) (default: {None})
         """
-
+        self._initpygame()
         self.screen_main.fill(color if color else (255, 255, 255))
 
     def close(self):
@@ -107,3 +138,17 @@ class Screen(object):
         self.pygame.init()
         self.screen_main = pygame.display.set_mode((self.display_width, self.display_height))
         self.clock = pygame.time.Clock()
+
+if __name__ == "__main__":
+    from scene import Scene
+    scr = Screen(700,700,(-10,-10), (60, 60))
+    sc = Scene.get_standart(50, 50, 3 , 3)
+
+    u = Unit.get_some((10,10))
+
+    scr.fill()
+    for pl in sc.obstacles:
+        scr.draw(pl) 
+    scr.draw(u)
+    scr.update()
+    input()
