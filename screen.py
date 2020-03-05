@@ -93,13 +93,27 @@ class Screen(object):
 
     def draw_unit(self, u: Unit):
         self.draw_poly_line(u.polygon_world, (0,255,0))
-        for p1, p2 in u.get_rays_world():
+        rays = u.intersected if u.intersected else u.get_rays_world()
+        for p1, p2 in rays:
             self.pygame.draw.aaline(
                 self.screen_main, 
                 (50,50,50),
                 self.to_pixels(p1),
                 self.to_pixels(p2)
             )
+        if u.vis_line:
+            self.pygame.draw.aaline(
+                self.screen_main, 
+                (255,50,50),
+                self.to_pixels(u.pos),
+                self.to_pixels(u.vis_line + u.pos)
+            )
+        # if u.vis_polygon:
+        #     self.pygame.draw.polygon(
+        #         self.screen_main, 
+        #         (255,255,0, 200),
+        #         [self.to_pixels(p) for p in u.vis_polygon.vecs]
+        #     )
 
 
     def draw_poly_line(self, pl: PolyLine, color=None):
@@ -136,7 +150,7 @@ class Screen(object):
             return
         self.pygame = pygame
         self.pygame.init()
-        self.screen_main = pygame.display.set_mode((self.display_width, self.display_height))
+        self.screen_main = pygame.display.set_mode((self.display_width, self.display_height), pygame.SRCALPHA)   
         self.clock = pygame.time.Clock()
 
 if __name__ == "__main__":

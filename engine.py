@@ -92,8 +92,8 @@ class Engine(object):
         if abs(move) > 1e-8:
             p1, p2 = unit.get_move_segment(move, rotate, dt)
             p1, p2 = self.scene.intersected_segment(p1, p2)
-            unit.pos = p2
-            log.append(f'Unit name={unit.name} moved from {p1} to {p2}')
+            unit.pos = p2 if (p2-p1).len() > 0.2 else p1
+            log.append(f'Unit name={unit.name} moved from {p1} to {unit.pos}')
         
         if abs(rotate) > 1e-8:
             a0 = unit.alpha
@@ -133,13 +133,13 @@ class Engine(object):
         signals['can_shoot'] = unit.can_shoot
 
     def add_vis_signals(self, unit: Unit, signals: dict):
-        unit.vis_ploygon = self.scene.get_vis_polygon(unit.pos, unit.r_vis, unit.alpha, unit.theta)
+        unit.vis_polygon = self.scene.get_vis_polygon(unit.pos, unit.r_vis, unit.alpha, unit.theta)
         signals['enemies'] = []
         signals['rounds'] = []
         for u in self.units:
             if u is not unit:
                 upos = u.pos
-                if unit.vis_ploygon.is_in(upos):
+                if unit.vis_polygon.is_in(upos):
                     unit.vis_line = upos - unit.pos
                     unit_ox = unit.to_world(Vec2(1,0), is_dir_vector=True)
                     angle = unit_ox.angle_to(unit.vis_line, degrees=True)
@@ -149,7 +149,7 @@ class Engine(object):
 
         for u in self.rounds:
             upos = u.pos
-            if unit.vis_ploygon.is_in(upos):
+            if unit.vis_polygon.is_in(upos):
                 vis_line = upos - unit.pos
                 unit_ox = unit.to_world(Vec2(1,0), is_dir_vector=True)
                 angle = unit_ox.angle_to(vis_line, degrees=True)
@@ -170,10 +170,16 @@ class Engine(object):
         
 
 if __name__ == "__main__":
-    scr = Screen(700,700,(-10,-10), (60, 60))
+    scr = Screen(700,700,(-13,-13), (63, 63))
     sc = Scene.get_standart(50, 50, 3 , 3)
     u1 = Unit.get_some((10,10), 'unit1')
-    u2 = Unit.get_some((50,50), 'unit2')
+    u2 = Unit.get_some((15,15), 'unit2')
     eng = Engine(sc, scr, u1, u2)
     while 1:
-        print(eng.step())
+        info = eng.step()
+        
+        # log = info['log']
+        # for mess in log:
+        #     if 'change vision' in mess:
+        #         print(mess)
+    input()

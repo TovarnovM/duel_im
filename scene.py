@@ -25,6 +25,9 @@ class Scene(object):
     def get_standart(cls, w: float, h: float, n: int, m: int):
         obs = [PolyLine([
             Vec2(0,0), Vec2(w,0), Vec2(w,h), Vec2(0, h)
+        ], enclosed=True),
+        PolyLine([
+            Vec2(-10,-10), Vec2(w+10,-10), Vec2(10+w,10+h), Vec2(-10, 10+h)
         ], enclosed=True)]
         w1, h1 = w / n, h / m
         r = min(w1, h1) * 0.2
@@ -53,8 +56,8 @@ class Scene(object):
         
         ps = [pos.copy()]
         for p2 in p2s:
-            p1, p2 = self.intersected_segment(pos, p2)
-            ps.append(p2)
+            p1, pi = self.intersected_segment(pos, p2)
+            ps.append(pi)
         return PolyLine(ps)
 
     def intersected_segment(self, p1: Vec2, p2: Vec2) -> tuple:

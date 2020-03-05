@@ -11,19 +11,35 @@ class Unit(object):
                 if np.random.random() < 0.3:
                     d[name] = np.random.uniform(v1, v2)
             res = {}
-            inner(res, 'move', -0.2, 1)
+            inner(res, 'move', -0.7, 1)
             inner(res, 'rotate', -1, 1)
             inner(res, 'vision', -1, 1)
             inner(res, 'fire', 0.5, 1)
             return res
-        return cls(uname, pos, np.random.uniform(-170,170), rnd_foo, 90, 20, 5, 90, 10, 1, 30, 3, 2)
+        return cls(
+            name=uname, 
+            pos=pos, 
+            alpha=np.random.uniform(-170,170), 
+            brain_foo=rnd_foo, 
+            theta=90, 
+            r_vis=20, 
+            v_max=5, 
+            d_alpha_max=90, 
+            n_rays=10, 
+            dmg=1, 
+            round_vel=5, 
+            hp=3, 
+            shot_delta=1, 
+            d_theta_max=90)
 
-    def __init__(self, name, pos, alpha, brain_foo, theta, r_vis, v_max, d_alpha_max, n_rays, dmg, round_vel, hp, shot_delta):
+    def __init__(self, name, pos, alpha, brain_foo, theta, r_vis, v_max, d_alpha_max, n_rays, dmg, round_vel, 
+            hp, shot_delta, d_theta_max):
         self.name = name
         self.pos = _convert(pos)
         self.alpha = alpha
         self.brain_foo = brain_foo
         self.theta = theta
+        self.d_theta_max = d_theta_max
         self.r_vis = r_vis
         self.v_max = v_max
         self.d_alpha_max = d_alpha_max
@@ -60,8 +76,8 @@ class Unit(object):
         self.set_alpha(self.alpha + dt * rotate_signal * self.d_alpha_max)
 
     def change_vision(self, d_vision, dt):
-        thetta_new = self.theta + dt * d_vision
-        thetta_new = 360 if thetta_new > 360 else 2 if thetta_new < 2 else thetta_new
+        thetta_new = self.theta + dt * d_vision * self.d_theta_max
+        thetta_new = 180 if thetta_new > 180 else 2 if thetta_new < 2 else thetta_new
         self.set_theta(thetta_new)
 
     @property
@@ -70,9 +86,9 @@ class Unit(object):
         pl2 = pl1.add_vec(self.pos)
         return pl2
 
-    def set_theta(self, thetta):
-        self.thetta = thetta
-        self.r_vis = sqrt(self.s_vis/thetta * 180 / pi)
+    def set_theta(self, theta):
+        self.theta = theta
+        self.r_vis = sqrt(self.s_vis/theta * 180 / pi)
         self.angles = np.linspace(-self.theta, self.theta, self.n_rays)
         self.rays = [Vec2(self.r_vis ,0).rotate(angle, degrees=True) for angle in self.angles]
 
@@ -102,7 +118,7 @@ class Unit(object):
     def shoot(self):
         if not self.can_shoot:
             return None
-        angle = np.random.normal(self.alpha, self.thetta/3)
+        angle = np.random.normal(self.alpha, self.theta/3)
         vel = Vec2(self.round_vel, 0).rotate(angle, degrees=True)
         self.time_last_shot = self.time
         v = 3*vel.norm() + self.pos
