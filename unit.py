@@ -5,14 +5,14 @@ import numpy as np
 
 class Unit(object):
     @classmethod
-    def get_some(cls, pos, uname='test_unit'):
+    def get_some(cls, pos, uname='test_unit', color=(30,255,30)):
         def rnd_foo(*args, **kwargs):
             def inner(d, name, v1, v2):
                 if np.random.random() < 0.3:
                     d[name] = np.random.uniform(v1, v2)
             res = {}
-            inner(res, 'move', -0.7, 1)
-            inner(res, 'rotate', -1, 1)
+            inner(res, 'move', -0.9, 1)
+            inner(res, 'rotate', -0.5, 1)
             inner(res, 'vision', -1, 1)
             inner(res, 'fire', 0.5, 1)
             return res
@@ -22,18 +22,19 @@ class Unit(object):
             alpha=np.random.uniform(-170,170), 
             brain_foo=rnd_foo, 
             theta=90, 
-            r_vis=20, 
-            v_max=5, 
-            d_alpha_max=90, 
+            r_vis=15, 
+            v_max=3, 
+            d_alpha_max=20, 
             n_rays=10, 
             dmg=1, 
-            round_vel=5, 
+            round_vel=4, 
             hp=3, 
-            shot_delta=1, 
-            d_theta_max=90)
+            shot_delta=2, 
+            d_theta_max=20,
+            color=color)
 
     def __init__(self, name, pos, alpha, brain_foo, theta, r_vis, v_max, d_alpha_max, n_rays, dmg, round_vel, 
-            hp, shot_delta, d_theta_max):
+            hp, shot_delta, d_theta_max, color):
         self.name = name
         self.pos = _convert(pos)
         self.alpha = alpha
@@ -49,6 +50,7 @@ class Unit(object):
         self.dmg = dmg
         self.round_vel = round_vel
         self.hp = hp
+        self.hp0 = hp
         self.time = 0
         self.time_last_shot = -999
         self.shot_delta = shot_delta
@@ -59,6 +61,7 @@ class Unit(object):
 
         self.set_alpha(alpha)
         self.set_theta(theta)
+        self.color = color
 
     @property
     def can_shoot(self):

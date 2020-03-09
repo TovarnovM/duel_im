@@ -30,7 +30,7 @@ class Scene(object):
             Vec2(-10,-10), Vec2(w+10,-10), Vec2(10+w,10+h), Vec2(-10, 10+h)
         ], enclosed=True)]
         w1, h1 = w / n, h / m
-        r = min(w1, h1) * 0.2
+        r = min(w1, h1) * 0.3
         for i in range(n):
             for j in range(m):
                 if (i==0 and j==0) or (i==(n-1) and j==(m-1)):
@@ -50,7 +50,7 @@ class Scene(object):
         self.obstacles = obstacles
 
     def get_vis_polygon(self, pos: Vec2, r: float, alpha: float, thetta: float) -> PolyLine:
-        n_rays = 13
+        n_rays = 10
         angles = np.linspace(-thetta+alpha, thetta+alpha, n_rays)
         p2s = [Vec2(r ,0).rotate(angle, degrees=True).add(pos) for angle in angles]
         
@@ -71,4 +71,5 @@ class Scene(object):
 
 if __name__ == "__main__":
     pl = rnd_polygon(200, 100, 50, 3, 20, 20)
+    print(pl.is_in(Vec2(200,100)))
     

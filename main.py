@@ -1,4 +1,4 @@
-from scene import Scene
+from engine import Engine
 
 def foo(input_dict):
     """[summary]
@@ -11,6 +11,8 @@ def foo(input_dict):
     """
     return {}
 
-im = Scene.get_standart(tank_brain_foo=foo, enemy_brain_foo=foo, render=True)
+im = Engine.get_standart(tank_brain_foo=foo, enemy_brain_foo=foo)
+while not im.done:
+    info = im.step(render=True)
 result = im.run()
 print(result)

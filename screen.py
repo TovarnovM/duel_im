@@ -1,5 +1,3 @@
-import pygame
-
 from easyvec import Vec2
 from easyvec.geometry import PolyLine, _convert
 from unit import Unit, Round
@@ -7,7 +5,7 @@ from unit import Unit, Round
 class Screen(object):
     """Класс для отображения состояния имитационной модели на плоскости. Требует библиотеки pygame ($pip install pygame)
     """
-    def __init__(self, display_width, display_height, v0, v1, clock_tick=40):
+    def __init__(self, display_width, display_height, v0, v1, clock_tick=80):
         """Конструктор
         
         Arguments:
@@ -62,11 +60,11 @@ class Screen(object):
         Keyword Arguments:
             clock_tick {int} -- максимальное количество кадров в секунду (default: {None})
         """
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
+        for event in self.pygame.event.get():
+            if event.type == self.pygame.QUIT:
+                self.pygame.quit()
                 quit()
-        pygame.display.update()
+        self.pygame.display.update()
         if clock_tick is not None:
             self.clock.tick(clock_tick)
         else:
@@ -80,6 +78,12 @@ class Screen(object):
             self.draw_unit(who)
         elif isinstance(who, Round):
             self.draw_round(who)
+        elif isinstance(who, str):
+            self.draw_text(who)
+
+    def draw_text(self, t: str):
+        text = self.myfont.render(t, False, (0,0,0))
+        self.screen_main.blit(text, (0,0))
 
     def draw_round(self, r: Round, color=None):
         if color is None:
@@ -88,16 +92,20 @@ class Screen(object):
             self.screen_main,
             color,
             self.to_pixels(r.pos),
-            2
+            3
         )
 
     def draw_unit(self, u: Unit):
-        self.draw_poly_line(u.polygon_world, (0,255,0))
+        self.pygame.draw.polygon(
+            self.screen_main, 
+            u.color,
+            [self.to_pixels(p) for p in u.polygon_world.vecs]
+            )
         rays = u.intersected if u.intersected else u.get_rays_world()
         for p1, p2 in rays:
             self.pygame.draw.aaline(
                 self.screen_main, 
-                (50,50,50),
+                (200,200,200),
                 self.to_pixels(p1),
                 self.to_pixels(p2)
             )
@@ -108,6 +116,14 @@ class Screen(object):
                 self.to_pixels(u.pos),
                 self.to_pixels(u.vis_line + u.pos)
             )
+        hp_w = 30
+        hp_h = 5
+        t = u.hp/u.hp0
+        x, y = self.to_pixels(u.pos)
+        rr = self.pygame.Rect(x - 15, y - 15, hp_w, hp_h)
+        rg = self.pygame.Rect(x - 15, y - 15, int(hp_w*t), hp_h)
+        self.pygame.draw.rect(self.screen_main, (255,0,0), rr)
+        self.pygame.draw.rect(self.screen_main, (0,255,0), rg)
         # if u.vis_polygon:
         #     self.pygame.draw.polygon(
         #         self.screen_main, 
@@ -118,7 +134,7 @@ class Screen(object):
 
     def draw_poly_line(self, pl: PolyLine, color=None):
         if color is None:
-            color = (0,0,255)
+            color = (0,0,0)
         self.pygame.draw.aalines(
             self.screen_main, 
             color, 
@@ -138,7 +154,8 @@ class Screen(object):
     def close(self):
         """Закончить отображение
         """
-        pygame.quit()
+        if self.pygame:
+            self.pygame.quit()
 
     def __del__(self):
         """Destructor
@@ -148,10 +165,13 @@ class Screen(object):
     def _initpygame(self):
         if self.pygame:
             return
+        import pygame
         self.pygame = pygame
         self.pygame.init()
-        self.screen_main = pygame.display.set_mode((self.display_width, self.display_height), pygame.SRCALPHA)   
+        self.pygame.font.init()
+        self.screen_main = pygame.display.set_mode((self.display_width, self.display_height))   
         self.clock = pygame.time.Clock()
+        self.myfont = pygame.font.SysFont('Arial', 30)
 
 if __name__ == "__main__":
     from scene import Scene

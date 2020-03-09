@@ -24,11 +24,11 @@ class Engine(object):
             scr.draw(u)
         for r in self.rounds:
             scr.draw(r)
+        scr.draw(f'steps = {self.step_count}, time = {self.time:.1f}')
         scr.update()
         
 
-    def step(self, render=True):
-        
+    def step(self, render=True):       
         log = []
         result = {
             'log': log,
@@ -47,6 +47,22 @@ class Engine(object):
         if render:
             self.render()
         return result
+
+    @property
+    def done(self):
+        if self.step_count >= 70000:
+            return True
+        for u in self.units:
+            if u.hp <= 0:
+                return True
+        return False 
+
+    def get_result(self):
+        u1 = self.units[0]
+        u2 = self.units[1]
+        if abs(u1.hp - u2.hp) < 1e-8:
+            return 'Ничья'
+        return f'Победил игрок {u1.name if u1.hp > u2.hp else u2.name}'
 
     def rounds_steps(self, dt: float, log: list):
         neet2explode = set()
@@ -91,9 +107,12 @@ class Engine(object):
         fire = self._validate('fire', comands, 0, 1)
         if abs(move) > 1e-8:
             p1, p2 = unit.get_move_segment(move, rotate, dt)
-            p1, p2 = self.scene.intersected_segment(p1, p2)
-            unit.pos = p2 if (p2-p1).len() > 0.2 else p1
-            log.append(f'Unit name={unit.name} moved from {p1} to {unit.pos}')
+            p1, p3 = self.scene.intersected_segment(p1, p2)
+            if p3 != p2:
+                unit.pos = p1
+            else:
+                unit.pos = p2
+                log.append(f'Unit name={unit.name} moved from {p1} to {unit.pos}')
         
         if abs(rotate) > 1e-8:
             a0 = unit.alpha
@@ -169,17 +188,31 @@ class Engine(object):
         signals['rays_intersected'] = [(p1-p2).len() for p1, p2 in unit.intersected]
         
 
+    @classmethod
+    def get_standart(cls, you_brain_foo, enemy_brain_foo=None):
+        pass
+
 if __name__ == "__main__":
-    scr = Screen(700,700,(-13,-13), (63, 63))
+    from pprint import pprint
+    scr = Screen(700,700,(-10,-10), (60, 60))
     sc = Scene.get_standart(50, 50, 3 , 3)
-    u1 = Unit.get_some((10,10), 'unit1')
+    u1 = Unit.get_some((10,10), 'unit1', color=(0,0,255))
     u2 = Unit.get_some((15,15), 'unit2')
     eng = Engine(sc, scr, u1, u2)
-    while 1:
+    import time
+
+    # t = time.time()
+    # for i in range(10000):
+    #     eng.step(render=False)
+    # print(10000/(time.time()-t))
+
+    while not eng.done:
         info = eng.step()
-        
-        # log = info['log']
-        # for mess in log:
-        #     if 'change vision' in mess:
-        #         print(mess)
-    input()
+        # print(info['step_count'])
+        # pprint(info)
+        log = info['log']
+        for mess in log:
+            if 'hp' in mess:
+                print(mess)
+    
+    print(eng.get_result())
