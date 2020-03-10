@@ -118,7 +118,9 @@ class Unit(object):
 
     def get_comand(self, signals: dict):
         if self.brain_foo:
-            return self.brain_foo(signals)
+            res = self.brain_foo(signals)
+            if isinstance(res, dict):
+                return res
         return {}
 
     def shoot(self):

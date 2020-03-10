@@ -1,4 +1,4 @@
-from unit import Unit
+from unit import Unit, random_behaivor
 from screen import Screen
 from scene import Scene
 from easyvec import Vec2
@@ -189,7 +189,7 @@ class Engine(object):
     def add_ray_signals(self, unit: Unit, signals: dict):
         rays = unit.get_rays_world()
         unit.intersected = [self.scene.intersected_segment(p1, p2) for p1, p2 in rays]
-        signals['rays_max'] = [(p1-p2).len() for p1, p2 in rays],
+        # signals['rays_max'] = [(p1-p2).len() for p1, p2 in rays],
         signals['rays_intersected'] = [(p1-p2).len() for p1, p2 in unit.intersected]
         
 
@@ -210,8 +210,8 @@ class Engine(object):
         scr = Screen(700,700,(-10,-10), (60, 60))
         sc = Scene.get_standart(50, 50, 3 , 3)
         p1, p2 = sc.pos_1, sc.pos_1 + (10, 10)
-        u1 = Unit.get_some(p1, 'you', color=(36,235,130))
-        u2 = Unit.get_some(p2, 'enemy',color=(233,44,44))
+        u1 = Unit.get_some(p1, 'you', color=(36,235,130), brain_foo=you_brain_foo)
+        u2 = Unit.get_some(p2, 'enemy',color=(233,44,44), brain_foo=enemy_brain_foo)
         u1.set_alpha(30)
         u2.set_alpha(170)
         u2.draw_stuff = False

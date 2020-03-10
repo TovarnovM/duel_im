@@ -1,18 +1,12 @@
-from engine import Engine
+from engine import Engine, random_behaivor
+from pprint import pprint
 
 def foo(input_dict):
-    """[summary]
-    
-    Arguments:
-        input_dict {[type]} -- [description]
-    
-    Returns:
-        [type] -- [description]
-    """
+    # ничего не делать
     return {}
 
-im = Engine.get_standart(tank_brain_foo=foo, enemy_brain_foo=foo)
+im = Engine.get_standart2(you_brain_foo=foo, enemy_brain_foo=random_behaivor)
 while not im.done:
     info = im.step(render=True)
-result = im.run()
+result = im.get_result()
 print(result)
