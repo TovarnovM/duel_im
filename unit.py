@@ -3,38 +3,40 @@ from easyvec.geometry import _convert
 from math import pi, sqrt
 import numpy as np
 
+def random_behaivor(*args, **kwargs):
+    def inner(d, name, v1, v2):
+        if np.random.random() < 0.3:
+            d[name] = np.random.uniform(v1, v2)
+    res = {}
+    inner(res, 'move', 0.9, 1)
+    inner(res, 'rotate', -0.5, 1)
+    inner(res, 'vision', -1, 0.8)
+    inner(res, 'fire', 0.5, 1)
+    return res    
+
 class Unit(object):
     @classmethod
-    def get_some(cls, pos, uname='test_unit', color=(30,255,30)):
-        def rnd_foo(*args, **kwargs):
-            def inner(d, name, v1, v2):
-                if np.random.random() < 0.3:
-                    d[name] = np.random.uniform(v1, v2)
-            res = {}
-            inner(res, 'move', -0.9, 1)
-            inner(res, 'rotate', -0.5, 1)
-            inner(res, 'vision', -1, 1)
-            inner(res, 'fire', 0.5, 1)
-            return res
+    def get_some(cls, pos, uname='test_unit', color=(30,255,30), brain_foo=None):
+        bf = brain_foo if brain_foo else random_behaivor
         return cls(
             name=uname, 
             pos=pos, 
             alpha=np.random.uniform(-170,170), 
-            brain_foo=rnd_foo, 
+            brain_foo=bf, 
             theta=90, 
             r_vis=15, 
-            v_max=3, 
+            v_max=1, 
             d_alpha_max=20, 
             n_rays=10, 
             dmg=1, 
-            round_vel=4, 
+            round_vel=2, 
             hp=3, 
-            shot_delta=2, 
+            shot_delta=5, 
             d_theta_max=20,
             color=color)
 
     def __init__(self, name, pos, alpha, brain_foo, theta, r_vis, v_max, d_alpha_max, n_rays, dmg, round_vel, 
-            hp, shot_delta, d_theta_max, color):
+            hp, shot_delta, d_theta_max, color, draw_stuff=True):
         self.name = name
         self.pos = _convert(pos)
         self.alpha = alpha
@@ -52,7 +54,7 @@ class Unit(object):
         self.hp = hp
         self.hp0 = hp
         self.time = 0
-        self.time_last_shot = -999
+        self.time_last_shot = -shot_delta
         self.shot_delta = shot_delta
 
         self.vis_polygon = None
@@ -62,6 +64,7 @@ class Unit(object):
         self.set_alpha(alpha)
         self.set_theta(theta)
         self.color = color
+        self.draw_stuff = draw_stuff
 
     @property
     def can_shoot(self):

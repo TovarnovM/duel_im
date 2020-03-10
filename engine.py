@@ -2,6 +2,7 @@ from unit import Unit
 from screen import Screen
 from scene import Scene
 from easyvec import Vec2
+import numpy as np
 
 class Engine(object):
     def __init__(self, scene: Scene, screen: Screen, tank: Unit, enemy: Unit, **kwargs):
@@ -18,14 +19,18 @@ class Engine(object):
             return
         scr = self.screen
         scr.fill()
+        for u in self.units:
+            scr.draw_vis_poly(u)
         for pl in self.scene.obstacles:
             scr.draw(pl)
-        for u in self.units:
-            scr.draw(u)
         for r in self.rounds:
             scr.draw(r)
+        for u in self.units:
+            scr.draw(u)
         scr.draw(f'steps = {self.step_count}, time = {self.time:.1f}')
         scr.update()
+        # if self.step_count % 4 == 0:
+        #     scr.pygame.image.save(scr.screen_main ,f'tmp/{self.step_count}.jpg')
         
 
     def step(self, render=True):       
@@ -176,7 +181,7 @@ class Engine(object):
 
 
     def add_pos_signals(self, unit: Unit, signals: dict):
-        signals['pos'] = unit.pos.as_tuple()
+        # signals['pos'] = unit.pos.as_tuple()
         signals['alpha'] = unit.alpha
         signals['theta'] = unit.theta
         signals['r_vis'] = unit.r_vis
@@ -190,24 +195,41 @@ class Engine(object):
 
     @classmethod
     def get_standart(cls, you_brain_foo, enemy_brain_foo=None):
-        pass
+        scr = Screen(700,700,(-10,-10), (60, 60))
+        sc = Scene.get_standart(50, 50, 3 , 3)
+        poss = [sc.pos_1, sc.pos_2]
+        np.random.shuffle(poss)
+        p1, p2 = poss
+        u1 = Unit.get_some(p1, 'you', color=(36,235,130), brain_foo=you_brain_foo)
+        u2 = Unit.get_some(p2, 'enemy',color=(233,44,44), brain_foo=enemy_brain_foo)
+        u2.draw_stuff = False
+        return cls(sc, scr, u2, u1)
+
+    @classmethod
+    def get_standart2(cls, you_brain_foo, enemy_brain_foo=None):
+        scr = Screen(700,700,(-10,-10), (60, 60))
+        sc = Scene.get_standart(50, 50, 3 , 3)
+        p1, p2 = sc.pos_1, sc.pos_1 + (10, 10)
+        u1 = Unit.get_some(p1, 'you', color=(36,235,130))
+        u2 = Unit.get_some(p2, 'enemy',color=(233,44,44))
+        u1.set_alpha(30)
+        u2.set_alpha(170)
+        u2.draw_stuff = False
+        res = cls(sc, scr, u2, u1) 
+        # res.units = []
+        return res
 
 if __name__ == "__main__":
     from pprint import pprint
-    scr = Screen(700,700,(-10,-10), (60, 60))
-    sc = Scene.get_standart(50, 50, 3 , 3)
-    u1 = Unit.get_some((10,10), 'unit1', color=(0,0,255))
-    u2 = Unit.get_some((15,15), 'unit2')
-    eng = Engine(sc, scr, u1, u2)
+    # scr = Screen(700,700,(-10,-10), (60, 60))
+    # sc = Scene.get_standart(50, 50, 3 , 3)
+    # u1 = Unit.get_some((10,10), 'unit1', color=(0,0,255))
+    # u2 = Unit.get_some((15,15), 'unit2')
+    eng = Engine.get_standart2(None)
     import time
 
-    # t = time.time()
-    # for i in range(10000):
-    #     eng.step(render=False)
-    # print(10000/(time.time()-t))
-
     while not eng.done:
-        info = eng.step()
+        info = eng.step(render=True)
         # print(info['step_count'])
         # pprint(info)
         log = info['log']

@@ -5,7 +5,7 @@ from unit import Unit, Round
 class Screen(object):
     """Класс для отображения состояния имитационной модели на плоскости. Требует библиотеки pygame ($pip install pygame)
     """
-    def __init__(self, display_width, display_height, v0, v1, clock_tick=80):
+    def __init__(self, display_width, display_height, v0, v1, clock_tick=120):
         """Конструктор
         
         Arguments:
@@ -64,6 +64,25 @@ class Screen(object):
             if event.type == self.pygame.QUIT:
                 self.pygame.quit()
                 quit()
+            elif event.type == self.pygame.KEYDOWN:
+                if event.key == self.pygame.K_SPACE:
+                    print('PAUSED')
+                    paused = True
+                    while paused:
+                        self.pygame.display.update()
+                        if clock_tick is not None:
+                            self.clock.tick(clock_tick)
+                        else:
+                            self.clock.tick(self.clock_tick)
+                        for event in self.pygame.event.get():
+                            if event.type == self.pygame.QUIT:
+                                self.pygame.quit()
+                                quit()
+                            elif event.type == self.pygame.KEYDOWN:
+                                if event.key == self.pygame.K_SPACE:
+                                    paused = False
+                                    print('UNPAUSED')
+
         self.pygame.display.update()
         if clock_tick is not None:
             self.clock.tick(clock_tick)
@@ -95,41 +114,53 @@ class Screen(object):
             3
         )
 
+    def draw_vis_poly(self, u: Unit):
+        if u.vis_polygon and u.draw_stuff:
+            self.pygame.draw.polygon(
+                self.screen_main, 
+                (255,255,200),
+                [self.to_pixels(p) for p in u.vis_polygon.vecs]
+            )
+
     def draw_unit(self, u: Unit):
+        if u.draw_stuff:
+            rays = u.intersected if u.intersected else u.get_rays_world()
+            for p1, p2 in rays:
+                self.pygame.draw.aaline(
+                    self.screen_main, 
+                    (220,220,220),
+                    self.to_pixels(p1),
+                    self.to_pixels(p2)
+                )
+            if u.vis_line:
+                self.pygame.draw.aaline(
+                    self.screen_main, 
+                    (255,50,50),
+                    self.to_pixels(u.pos),
+                    self.to_pixels(u.vis_line + u.pos)
+                )
+
         self.pygame.draw.polygon(
             self.screen_main, 
             u.color,
             [self.to_pixels(p) for p in u.polygon_world.vecs]
             )
-        rays = u.intersected if u.intersected else u.get_rays_world()
-        for p1, p2 in rays:
-            self.pygame.draw.aaline(
-                self.screen_main, 
-                (200,200,200),
-                self.to_pixels(p1),
-                self.to_pixels(p2)
-            )
-        if u.vis_line:
-            self.pygame.draw.aaline(
-                self.screen_main, 
-                (255,50,50),
-                self.to_pixels(u.pos),
-                self.to_pixels(u.vis_line + u.pos)
-            )
+
+
         hp_w = 30
         hp_h = 5
         t = u.hp/u.hp0
         x, y = self.to_pixels(u.pos)
-        rr = self.pygame.Rect(x - 15, y - 15, hp_w, hp_h)
-        rg = self.pygame.Rect(x - 15, y - 15, int(hp_w*t), hp_h)
+        rr = self.pygame.Rect(x - 15, y - 20, hp_w, hp_h)
+        rg = self.pygame.Rect(x - 15, y - 20, int(hp_w*t), hp_h)
         self.pygame.draw.rect(self.screen_main, (255,0,0), rr)
         self.pygame.draw.rect(self.screen_main, (0,255,0), rg)
-        # if u.vis_polygon:
-        #     self.pygame.draw.polygon(
-        #         self.screen_main, 
-        #         (255,255,0, 200),
-        #         [self.to_pixels(p) for p in u.vis_polygon.vecs]
-        #     )
+
+        if not u.can_shoot:
+            t2 = (u.time - u.time_last_shot) / u.shot_delta
+            rr = self.pygame.Rect(x - 15, y - 15, int(hp_w*t2), 2)
+            self.pygame.draw.rect(self.screen_main, (150,150,150), rr)
+
 
 
     def draw_poly_line(self, pl: PolyLine, color=None):

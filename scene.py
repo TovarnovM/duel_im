@@ -33,21 +33,28 @@ class Scene(object):
         r = min(w1, h1) * 0.3
         for i in range(n):
             for j in range(m):
-                if (i==0 and j==0) or (i==(n-1) and j==(m-1)):
-                    continue
                 x = w1/2 + w1 * i + np.random.uniform(-0.1, 0.1) * w1
                 y = h1/2 + h1 * j + np.random.uniform(-0.1, 0.1) * h1
+                if (i==0 and j==0): 
+                    pos_1 = Vec2(x, y)
+                    continue
+                if (i==(n-1) and j==(m-1)):
+                    pos_2 = Vec2(x, y)
+                    continue
+               
                 ri = r * np.random.uniform(0.9, 1.1)
                 nn = np.random.randint(3,6)
                 dx = w1 * np.random.uniform(0.02, 0.1)
                 dy = h1 * np.random.uniform(0.02, 0.1)
                 obs.append(rnd_polygon(x,y,ri, nn, dx, dy))
-        return cls(obs)
+        return cls(obs, pos_1, pos_2)
 
 
 
-    def __init__(self, obstacles):
+    def __init__(self, obstacles, pos_1=None, pos_2=None):
         self.obstacles = obstacles
+        self.pos_1 = pos_1
+        self.pos_2 = pos_2
 
     def get_vis_polygon(self, pos: Vec2, r: float, alpha: float, thetta: float) -> PolyLine:
         n_rays = 10
