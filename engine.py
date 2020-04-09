@@ -206,6 +206,17 @@ class Engine(object):
         return cls(sc, scr, u2, u1)
 
     @classmethod
+    def get_sam_vs_fed(cls, sam_brain_foo, fed_brain_foo):
+        scr = Screen(700,700,(-10,-10), (60, 60))
+        sc = Scene.get_standart(50, 50, 3 , 3)
+        poss = [sc.pos_1, sc.pos_2]
+        np.random.shuffle(poss)
+        p1, p2 = poss
+        u1 = Unit.get_some(p1, 'Samoilov', color=(36,235,130), brain_foo=sam_brain_foo)
+        u2 = Unit.get_some(p2, 'Fedulov',color=(233,44,44), brain_foo=fed_brain_foo)
+        return cls(sc, scr, u2, u1)
+
+    @classmethod
     def get_standart2(cls, you_brain_foo, enemy_brain_foo=None):
         scr = Screen(700,700,(-10,-10), (60, 60))
         sc = Scene.get_standart(50, 50, 3 , 3)
